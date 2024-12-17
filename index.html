@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos e Resumos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            width: 100%;
+        }
+        main {
+            padding: 1rem;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .chart-container {
+            margin-bottom: 2rem;
+        }
+        canvas {
+            max-width: 100%;
+            height: 400px;
+        }
+        .summary {
+            margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+        }
+        .summary h3 {
+            margin-top: 0;
+        }
+        .summary table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .summary table, th, td {
+            border: 1px solid #ddd;
+        }
+        .summary th, .summary td {
+            padding: 8px;
+            text-align: center;
+        }
+        .summary th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gráficos e Resumos</h1>
+    </header>
+    <main>
+        <div class="chart-container">
+            <h2>Gráfico 1: Média de Dados por Hora</h2>
+            <canvas id="averageChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h2>Gráfico 2: Contagem Média por Hora (Arredondada)</h2>
+            <canvas id="countChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h2>Gráfico 3: Valores da Coluna 2 em Ordem Decrescente</h2>
+            <canvas id="sortedChart"></canvas>
+        </div>
+        <div class="summary">
+            <h3>Resumo Estatístico</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Desvio Padrão</th>
+                        <th>Máximo</th>
+                        <th>Mínimo</th>
+                        <th>Média</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryBody"></tbody>
+            </table>
+        </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let globalData = [];
+        let filteredData = [];
+
+        document.getElementById('fileInput')?.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csvData = e.target.result;
+                    globalData = parseCSV(csvData);
+                    if (globalData.length > 0) {
+                        calculateAndFilterData();
+                        createCharts();
+                        generateSummary();
+                    } else {
+                        alert('Nenhum dado válido encontrado no arquivo CSV.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function parseCSV(data) {
+            const rows = data.split('\n').filter(row => row.trim() !== '');
+            return rows.slice(1).map(row => row.split(',').map(cell => parseFloat(cell.trim()) || 0));
+        }
+
+        function calculateAndFilterData() {
+            const values = globalData.map(row => row[1]);
+            const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+            const stdDev = Math.sqrt(values.map(v => Math.pow(v - mean, 2)).reduce((a, b) => a + b) / values.length);
+            filteredData = values.filter(v => Math.abs(v - mean) <= 2 * stdDev);
+        }
+
+        function createCharts() {
+            createAverageChart();
+            createCountChart();
+            createSortedChart();
+        }
+
+        function createAverageChart() {
+            const ctx = document.getElementById('averageChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['00:00', '01:00', '02:00'], // Horas fictícias
+                    datasets: [{
+                        label: 'Média por Hora',
+                        data: [12, 19, 8], // Dados fictícios
+                        backgroundColor: '#4CAF50'
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        function createCountChart() {
+            const ctx = document.getElementById('countChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['00:00', '01:00', '02:00'],
+                    datasets: [{
+                        label: 'Contagem Arredondada',
+                        data: [5, 8, 3],
+                        backgroundColor: '#FF9800'
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        function createSortedChart() {
+            const ctx = document.getElementById('sortedChart').getContext('2d');
+            const sortedValues = filteredData.slice().sort((a, b) => b - a);
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedValues.map((_, i) => i + 1),
+                    datasets: [{
+                        label: 'Valores Ordenados',
+                        data: sortedValues,
+                        borderColor: '#3F51B5',
+                        fill: false
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        function generateSummary() {
+            const values = filteredData;
+            const summaryTable = document.getElementById('summaryBody');
+            summaryTable.innerHTML = '';
+            [1, 2, 3].forEach(stdMultiplier => {
+                const stats = calculateStats(values, stdMultiplier);
+                const row = `<tr>
+                                <td>${stdMultiplier} σ</td>
+                                <td>${stats.max}</td>
+                                <td>${stats.min}</td>
+                                <td>${stats.mean}</td>
+                            </tr>`;
+                summaryTable.innerHTML += row;
+            });
+        }
+
+        function calculateStats(data, multiplier) {
+            const mean = data.reduce((sum, v) => sum + v, 0) / data.length;
+            const stdDev = Math.sqrt(data.map(v => Math.pow(v - mean, 2)).reduce((a, b) => a + b) / data.length);
+            const filtered = data.filter(v => Math.abs(v - mean) <= multiplier * stdDev);
+            return {
+                max: Math.max(...filtered).toFixed(2),
+                min: Math.min(...filtered).toFixed(2),
+                mean: (filtered.reduce((sum, v) => sum + v, 0) / filtered.length).toFixed(2)
+            };
+        }
+    </script>
+</body>
+</html>
