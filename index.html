@@ -107,16 +107,8 @@
 
         <div id="chartContainer">
             <div>
-                <h2>Média de Dados por Hora</h2>
-                <canvas id="averageChart"></canvas>
-            </div>
-            <div>
-                <h2>Contagem por Hora</h2>
-                <canvas id="countChart"></canvas>
-            </div>
-            <div>
-                <h2>Valores em Ordem Decrescente</h2>
-                <canvas id="orderedValuesChart"></canvas>
+                <h2>Tempo por Motivo (Decrescente)</h2>
+                <canvas id="groupedChart"></canvas>
             </div>
         </div>
     </main>
@@ -131,9 +123,7 @@
                     const csvData = e.target.result;
                     globalData = parseCSV(csvData);
                     if (globalData.content.length > 0) {
-                        createAverageChart(globalData);
-                        createCountChart(globalData);
-                        createOrderedValuesChart(globalData);
+                        createGroupedChart(globalData);
                     } else {
                         alert('Nenhum dado válido encontrado no arquivo CSV.');
                     }
@@ -144,9 +134,7 @@
 
         document.getElementById('filterButton').addEventListener('click', function() {
             if (globalData.content) {
-                createAverageChart(globalData);
-                createCountChart(globalData);
-                createOrderedValuesChart(globalData);
+                createGroupedChart(globalData);
             }
         });
 
@@ -156,9 +144,49 @@
             return { content };
         }
 
-        // Chart creation functions (createAverageChart, createCountChart, createOrderedValuesChart)
-        // Place your chart creation functions here, as defined in your initial code.
+        function createGroupedChart(data) {
+            const groupedData = {};
 
+            data.content.forEach(row => {
+                const reason = row[1]; // Supondo que a coluna 1 seja o motivo
+                const time = parseFloat(row[2]); // Supondo que a coluna 2 seja o tempo
+
+                if (!isNaN(time)) {
+                    groupedData[reason] = (groupedData[reason] || 0) + time;
+                }
+            });
+
+            const sortedData = Object.entries(groupedData)
+                .sort((a, b) => b[1] - a[1])
+                .reduce((acc, [key, value]) => {
+                    acc.labels.push(key);
+                    acc.values.push(value);
+                    return acc;
+                }, { labels: [], values: [] });
+
+            const ctx = document.getElementById('groupedChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedData.labels,
+                    datasets: [{
+                        label: 'Tempo Total',
+                        data: sortedData.values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
