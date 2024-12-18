@@ -216,7 +216,7 @@
                 .sort((a, b) => b[1] - a[1])
                 .reduce((acc, [key, value]) => {
                     acc.labels.push(key);
-                    acc.values.push(formatTime(value));
+                    acc.values.push(value);
                     return acc;
                 }, { labels: [], values: [] });
 
@@ -242,13 +242,6 @@
                     }
                 }
             });
-        }
-
-        // Função para formatar os tempos em minutos:segundos
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.round(seconds % 60);
-            return `${minutes}:${remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds}`;
         }
     </script>
 </body>
