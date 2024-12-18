@@ -170,12 +170,6 @@
             return { content };
         }
 
-        function convertToMMSS(timeInMinutes) {
-            const minutes = Math.floor(timeInMinutes);
-            const seconds = Math.round((timeInMinutes - minutes) * 60);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
         function createGroupedChart(data) {
             const groupedData = {};
             const countData = {};
@@ -208,7 +202,7 @@
             // Exibir as médias dentro de botões
             const averageContainer = document.getElementById('averageContainer');
             averageContainer.innerHTML = `
-                <button class="average-button">Média de "Rota 1": ${convertToMMSS(averageRota1)}</button>
+                <button class="average-button">Média de "Rota 1": ${averageRota1.toFixed(2)} minutos</button>
                 <button class="average-button">Média de "Quantidade de bobinas": ${averageBobinas.toFixed(2)} unidades</button>
             `;
 
@@ -222,7 +216,7 @@
                 .sort((a, b) => b[1] - a[1])
                 .reduce((acc, [key, value]) => {
                     acc.labels.push(key);
-                    acc.values.push(value); // Mantendo os valores numéricos para o gráfico
+                    acc.values.push(formatTime(value));
                     return acc;
                 }, { labels: [], values: [] });
 
@@ -232,7 +226,7 @@
                 data: {
                     labels: sortedData.labels,
                     datasets: [{
-                        label: 'Tempo Médio (minutos)',
+                        label: 'Tempo Médio',
                         data: sortedData.values,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
@@ -243,16 +237,18 @@
                     responsive: true,
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return convertToMMSS(value); // Convertendo para mm:ss na escala Y
-                                }
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
+        }
+
+        // Função para formatar os tempos em minutos:segundos
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.round(seconds % 60);
+            return `${minutes}:${remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds}`;
         }
     </script>
 </body>
