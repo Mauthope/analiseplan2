@@ -170,6 +170,12 @@
             return { content };
         }
 
+        function convertToMinutesSeconds(timeInSeconds) {
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = Math.round(timeInSeconds % 60);
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
         function createGroupedChart(data) {
             const groupedData = {};
             const countData = {};
@@ -202,7 +208,7 @@
             // Exibir as médias dentro de botões
             const averageContainer = document.getElementById('averageContainer');
             averageContainer.innerHTML = `
-                <button class="average-button">Média de "Rota 1": ${averageRota1.toFixed(2)} minutos</button>
+                <button class="average-button">Média de "Rota 1": ${convertToMinutesSeconds(averageRota1)}</button>
                 <button class="average-button">Média de "Quantidade de bobinas": ${averageBobinas.toFixed(2)} unidades</button>
             `;
 
@@ -216,7 +222,7 @@
                 .sort((a, b) => b[1] - a[1])
                 .reduce((acc, [key, value]) => {
                     acc.labels.push(key);
-                    acc.values.push(value);
+                    acc.values.push(convertToMinutesSeconds(value)); // Converte os tempos para formato mm:ss
                     return acc;
                 }, { labels: [], values: [] });
 
@@ -237,7 +243,12 @@
                     responsive: true,
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value; // Os valores já estão formatados como mm:ss
+                                }
+                            }
                         }
                     }
                 }
