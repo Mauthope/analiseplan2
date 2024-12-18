@@ -81,12 +81,27 @@
             text-align: center;
         }
 
-        .average {
+        .average-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .average-button {
+            padding: 1rem 2rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
             font-size: 1.2rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 1rem;
-            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        .average-button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -114,8 +129,9 @@
         </div>
 
         <div id="chartContainer">
-            <div id="averageRota1" class="average"></div>
-            <div id="averageBobinas" class="average"></div>
+            <div class="average-container" id="averageContainer">
+                <!-- Médias de "Rota 1" e "Quantidade de bobinas" serão colocadas aqui -->
+            </div>
             <div>
                 <h2>Tempo por Motivo (Decrescente)</h2>
                 <canvas id="groupedChart"></canvas>
@@ -183,9 +199,12 @@
             const averageRota1 = (totalRota1 / countRota1) / 60; // Dividido por 60
             const averageBobinas = totalBobinas / countBobinas; // Média de bobinas sem alteração
 
-            // Exibir as médias
-            document.getElementById('averageRota1').textContent = `Média de "Rota 1": ${averageRota1.toFixed(2)} minutos`;
-            document.getElementById('averageBobinas').textContent = `Média de "Quantidade de bobinas": ${averageBobinas.toFixed(2)} unidades`;
+            // Exibir as médias dentro de botões
+            const averageContainer = document.getElementById('averageContainer');
+            averageContainer.innerHTML = `
+                <button class="average-button">Média de "Rota 1": ${averageRota1.toFixed(2)} minutos</button>
+                <button class="average-button">Média de "Quantidade de bobinas": ${averageBobinas.toFixed(2)} unidades</button>
+            `;
 
             const averagedData = Object.entries(groupedData)
                 .reduce((acc, [key, total]) => {
