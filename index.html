@@ -155,7 +155,6 @@
 
         function createGroupedChart(data) {
             const groupedData = {};
-            const countData = {};
             let rota1Count = 0;
             let rota1TotalTime = 0;
 
@@ -164,8 +163,12 @@
                 const time = parseFloat(row[2]); // Supondo que a coluna 2 seja o tempo
 
                 if (reason !== "Rota1" && !isNaN(time)) {
-                    groupedData[reason] = (groupedData[reason] || 0) + time;
-                    countData[reason] = (countData[reason] || 0) + 1;
+                    // Calculando a média diretamente
+                    if (!groupedData[reason]) {
+                        groupedData[reason] = { total: 0, count: 0 };
+                    }
+                    groupedData[reason].total += time;
+                    groupedData[reason].count += 1;
                 }
 
                 // Contabilizando a "Rota 1"
@@ -175,12 +178,14 @@
                 }
             });
 
+            // Calculando as médias
             const averagedData = Object.entries(groupedData)
-                .reduce((acc, [key, total]) => {
-                    acc[key] = total / countData[key] / 60; // Dividido por 60 para converter de segundos para minutos
+                .reduce((acc, [key, value]) => {
+                    acc[key] = (value.total / value.count) / 60; // Dividido por 60 para converter de segundos para minutos
                     return acc;
                 }, {});
 
+            // Ordenando os dados
             const sortedData = Object.entries(averagedData)
                 .sort((a, b) => b[1] - a[1])
                 .reduce((acc, [key, value]) => {
@@ -189,6 +194,7 @@
                     return acc;
                 }, { labels: [], values: [] });
 
+            // Criando o gráfico
             const ctx = document.getElementById('groupedChart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
