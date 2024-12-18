@@ -222,7 +222,7 @@
                 .sort((a, b) => b[1] - a[1])
                 .reduce((acc, [key, value]) => {
                     acc.labels.push(key);
-                    acc.values.push(convertToMMSS(value)); // Convertendo o valor para mm:ss
+                    acc.values.push(value); // Mantendo os valores numéricos para o gráfico
                     return acc;
                 }, { labels: [], values: [] });
 
@@ -232,7 +232,7 @@
                 data: {
                     labels: sortedData.labels,
                     datasets: [{
-                        label: 'Tempo Médio',
+                        label: 'Tempo Médio (minutos)',
                         data: sortedData.values,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
@@ -246,7 +246,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return value; // Não há necessidade de modificar os valores no eixo Y, pois já estão formatados
+                                    return convertToMMSS(value); // Convertendo para mm:ss na escala Y
                                 }
                             }
                         }
