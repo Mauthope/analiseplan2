@@ -146,17 +146,25 @@
 
         function createGroupedChart(data) {
             const groupedData = {};
+            const countData = {};
 
             data.content.forEach(row => {
                 const reason = row[1]; // Supondo que a coluna 1 seja o motivo
                 const time = parseFloat(row[2]); // Supondo que a coluna 2 seja o tempo
 
-                if (!isNaN(time)) {
+                if (reason !== "Rota1" && !isNaN(time)) {
                     groupedData[reason] = (groupedData[reason] || 0) + time;
+                    countData[reason] = (countData[reason] || 0) + 1;
                 }
             });
 
-            const sortedData = Object.entries(groupedData)
+            const averagedData = Object.entries(groupedData)
+                .reduce((acc, [key, total]) => {
+                    acc[key] = total / countData[key];
+                    return acc;
+                }, {});
+
+            const sortedData = Object.entries(averagedData)
                 .sort((a, b) => b[1] - a[1])
                 .reduce((acc, [key, value]) => {
                     acc.labels.push(key);
@@ -170,7 +178,7 @@
                 data: {
                     labels: sortedData.labels,
                     datasets: [{
-                        label: 'Tempo Total',
+                        label: 'Tempo Médio',
                         data: sortedData.values,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
