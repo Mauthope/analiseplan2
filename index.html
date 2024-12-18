@@ -81,11 +81,11 @@
             text-align: center;
         }
 
-        #averageContainer {
+        #averageRota1 {
+            text-align: center;
             font-size: 1.2rem;
+            color: #333;
             margin-bottom: 1rem;
-            font-weight: bold;
-            color: #4CAF50;
         }
     </style>
 </head>
@@ -112,7 +112,7 @@
             </div>
         </div>
 
-        <div id="averageContainer"></div> <!-- Local para exibir a média -->
+        <div id="averageRota1"></div> <!-- Aqui será exibida a média da Rota 1 -->
 
         <div id="chartContainer">
             <div>
@@ -156,20 +156,27 @@
         function createGroupedChart(data) {
             const groupedData = {};
             const countData = {};
+            let rota1TotalTime = 0;
+            let rota1Count = 0;
 
             data.content.forEach(row => {
                 const reason = row[1]; // Supondo que a coluna 1 seja o motivo
-                const time = parseFloat(row[2]); // Supondo que a coluna 2 seja o tempo em segundos
+                const time = parseFloat(row[2]); // Supondo que a coluna 2 seja o tempo
 
-                if (reason !== "Rota1" && !isNaN(time)) {
+                if (reason === "Rota1" && !isNaN(time)) {
+                    rota1TotalTime += time;
+                    rota1Count++;
+                } else if (reason !== "Rota1" && !isNaN(time)) {
                     groupedData[reason] = (groupedData[reason] || 0) + time;
                     countData[reason] = (countData[reason] || 0) + 1;
                 }
             });
 
+            const rota1Average = rota1Count > 0 ? (rota1TotalTime / rota1Count) / 60 : 0; // Média da Rota1 em horas
+
             const averagedData = Object.entries(groupedData)
                 .reduce((acc, [key, total]) => {
-                    acc[key] = (total / countData[key]) / 60; // Convertendo de segundos para minutos
+                    acc[key] = total / countData[key] / 60; // Média em horas
                     return acc;
                 }, {});
 
@@ -181,8 +188,8 @@
                     return acc;
                 }, { labels: [], values: [] });
 
-            const avgRota1 = averagedData["Rota1"] || 0; // Pegando a média de "Rota1"
-            document.getElementById('averageContainer').innerText = `Média de "Rota1": ${avgRota1.toFixed(2)} minutos`; // Exibindo a média de "Rota1"
+            // Exibindo o valor da média da Rota1 acima do gráfico
+            document.getElementById('averageRota1').innerHTML = `Média da Rota 1: ${rota1Average.toFixed(2)} horas`;
 
             const ctx = document.getElementById('groupedChart').getContext('2d');
             new Chart(ctx, {
@@ -190,7 +197,7 @@
                 data: {
                     labels: sortedData.labels,
                     datasets: [{
-                        label: 'Tempo Médio (minutos)',
+                        label: 'Tempo Médio (Horas)',
                         data: sortedData.values,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
