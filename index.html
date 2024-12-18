@@ -81,11 +81,12 @@
             text-align: center;
         }
 
-        #averageRota1 {
-            text-align: center;
+        .rota1-info {
             font-size: 1.2rem;
+            font-weight: bold;
             color: #333;
-            margin-bottom: 1rem;
+            margin-top: 1rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -112,13 +113,12 @@
             </div>
         </div>
 
-        <div id="averageRota1"></div> <!-- Aqui será exibida a média da Rota 1 -->
-
         <div id="chartContainer">
             <div>
                 <h2>Tempo por Motivo (Decrescente)</h2>
                 <canvas id="groupedChart"></canvas>
             </div>
+            <div class="rota1-info" id="rota1Info"></div>
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -156,27 +156,28 @@
         function createGroupedChart(data) {
             const groupedData = {};
             const countData = {};
-            let rota1TotalTime = 0;
             let rota1Count = 0;
+            let rota1TotalTime = 0;
 
             data.content.forEach(row => {
                 const reason = row[1]; // Supondo que a coluna 1 seja o motivo
                 const time = parseFloat(row[2]); // Supondo que a coluna 2 seja o tempo
 
-                if (reason === "Rota1" && !isNaN(time)) {
-                    rota1TotalTime += time;
-                    rota1Count++;
-                } else if (reason !== "Rota1" && !isNaN(time)) {
+                if (reason !== "Rota1" && !isNaN(time)) {
                     groupedData[reason] = (groupedData[reason] || 0) + time;
                     countData[reason] = (countData[reason] || 0) + 1;
                 }
-            });
 
-            const rota1Average = rota1Count > 0 ? (rota1TotalTime / rota1Count) / 60 : 0; // Média da Rota1 em horas
+                // Contabilizando a "Rota 1"
+                if (reason === "Rota1" && !isNaN(time)) {
+                    rota1Count++;
+                    rota1TotalTime += time;
+                }
+            });
 
             const averagedData = Object.entries(groupedData)
                 .reduce((acc, [key, total]) => {
-                    acc[key] = total / countData[key] / 60; // Média em horas
+                    acc[key] = total / countData[key] / 60; // Dividido por 60 para converter de segundos para minutos
                     return acc;
                 }, {});
 
@@ -188,16 +189,13 @@
                     return acc;
                 }, { labels: [], values: [] });
 
-            // Exibindo o valor da média da Rota1 acima do gráfico
-            document.getElementById('averageRota1').innerHTML = `Média da Rota 1: ${rota1Average.toFixed(2)} horas`;
-
             const ctx = document.getElementById('groupedChart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: sortedData.labels,
                     datasets: [{
-                        label: 'Tempo Médio (Horas)',
+                        label: 'Tempo Médio (minutos)',
                         data: sortedData.values,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
@@ -213,6 +211,15 @@
                     }
                 }
             });
+
+            // Exibindo a informação da Rota 1 logo abaixo do gráfico
+            if (rota1Count > 0) {
+                const rota1Average = (rota1TotalTime / rota1Count) / 60; // Média de Rota1 em minutos
+                const rota1InfoText = `Rota 1: Tempo Médio: ${rota1Average.toFixed(2)} minutos | Quantidade de Bobinas: ${rota1Count}`;
+                document.getElementById('rota1Info').textContent = rota1InfoText;
+            } else {
+                document.getElementById('rota1Info').textContent = 'Nenhuma ocorrência de Rota 1 encontrada.';
+            }
         }
     </script>
 </body>
