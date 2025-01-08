@@ -121,108 +121,67 @@ canvas {
     </div>
     <script src="script.js"></script>
     <script>
-      let data1 = [];
+    let data1 = [];
 let data2 = [];
-let chart1 = null;
-let chart2 = null;
 
-document.querySelectorAll('.import-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const fileId = this.getAttribute('data-for');
-        document.getElementById(fileId).click();
-    });
-});
+document.getElementById('file1').addEventListener('change', (event) => loadFile(event, 1));
+document.getElementById('file2').addEventListener('change', (event) => loadFile(event, 2));
+document.getElementById('compareBtn').addEventListener('click', compareTables);
 
-document.getElementById('file1').addEventListener('change', function(e) {
-    handleFileSelect(e, 'file1Name', data1);
-});
-
-document.getElementById('file2').addEventListener('change', function(e) {
-    handleFileSelect(e, 'file2Name', data2);
-});
-
-function handleFileSelect(e, fileNameId, dataArray) {
-    const file = e.target.files[0];
-    if (file) {
-        document.getElementById(fileNameId).textContent = file.name;
-        Papa.parse(file, {
-            header: true,
-            complete: function(results) {
-                dataArray.length = 0; // Clear the array
-                dataArray.push(...results.data);
-                console.log(`Arquivo ${fileNameId} carregado:`, dataArray);
-            },
-            error: function(error) {
-                console.error(`Erro ao analisar o arquivo ${fileNameId}:`, error);
-                alert(`Erro ao analisar o arquivo. Por favor, verifique o formato do CSV.`);
+function loadFile(event, fileNumber) {
+    const file = event.target.files[0];
+    Papa.parse(file, {
+        complete: (results) => {
+            if (fileNumber === 1) {
+                data1 = results.data;
+            } else {
+                data2 = results.data;
             }
-        });
-    }
+            console.log(`Arquivo ${fileNumber} carregado:`, results.data);
+        },
+        header: true
+    });
 }
 
-document.getElementById('generateCharts').addEventListener('click', generateCharts);
-
-function generateCharts() {
+function compareTables() {
     if (data1.length === 0 || data2.length === 0) {
-        alert('Por favor, importe ambos os arquivos CSV antes de gerar os gráficos.');
+        alert('Por favor, carregue ambos os arquivos antes de comparar.');
         return;
     }
 
-    try {
-        const processedData1 = processData(data1);
-        const processedData2 = processData(data2);
+    const processedData1 = processData(data1);
+    const processedData2 = processData(data2);
 
-        if (processedData1.labels.length === 0 || processedData2.labels.length === 0) {
-            throw new Error('Dados processados estão vazios. Verifique se os arquivos CSV contêm dados válidos.');
-        }
-
-        createPieChart('chart1', processedData1, 'Gráfico 1');
-        createPieChart('chart2', processedData2, 'Gráfico 2');
-    } catch (error) {
-        console.error('Erro ao gerar gráficos:', error);
-        alert(`Erro ao gerar gráficos: ${error.message}`);
-    }
+    createChart('chart1', processedData1, 'Tabela 1');
+    createChart('chart2', processedData2, 'Tabela 2');
 }
 
 function processData(data) {
-    const groupedData = {};
-    data.forEach(entry => {
-        const motivo = entry['Motivos'];
-        const tempo = parseFloat(entry['Tempo Decorrido (s)']);
+    const motivosTempo = {};
+
+    data.forEach(row => {
+        const motivo = row['Motivos'];
+        const tempo = parseFloat(row['Tempo Decorrido (s)']);
+        
         if (motivo && !isNaN(tempo)) {
-            if (!groupedData[motivo]) {
-                groupedData[motivo] = { total: 0, count: 0 };
+            if (!motivosTempo[motivo]) {
+                motivosTempo[motivo] = { total: 0, count: 0 };
             }
-            groupedData[motivo].total += tempo;
-            groupedData[motivo].count++;
+            motivosTempo[motivo].total += tempo;
+            motivosTempo[motivo].count++;
         }
     });
 
-    const labels = [];
-    const values = [];
-    for (const [motivo, data] of Object.entries(groupedData)) {
-        labels.push(motivo);
-        values.push(data.total / data.count);
-    }
+    const labels = Object.keys(motivosTempo);
+    const values = labels.map(motivo => motivosTempo[motivo].total / motivosTempo[motivo].count);
 
     return { labels, values };
 }
 
-function createPieChart(canvasId, data, title) {
-    const ctx = document.getElementById(canvasId);
-    if (!ctx) {
-        console.error(`Elemento canvas com id ${canvasId} não encontrado.`);
-        return;
-    }
-
-    // Destruir o gráfico existente, se houver
-    if (canvasId === 'chart1' && chart1) {
-        chart1.destroy();
-    } else if (canvasId === 'chart2' && chart2) {
-        chart2.destroy();
-    }
-
-    const newChart = new Chart(ctx, {
+function createChart(canvasId, data, title) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    
+    new Chart(ctx, {
         type: 'pie',
         data: {
             labels: data.labels,
@@ -236,7 +195,6 @@ function createPieChart(canvasId, data, title) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
             plugins: {
                 title: {
                     display: true,
@@ -256,27 +214,7 @@ function createPieChart(canvasId, data, title) {
             }
         }
     });
-
-    // Armazenar a referência do novo gráfico
-    if (canvasId === 'chart1') {
-        chart1 = newChart;
-    } else if (canvasId === 'chart2') {
-        chart2 = newChart;
-    }
 }
-
-// Função para depuração
-function logDataStatus() {
-    console.log('Status dos dados:');
-    console.log('data1:', data1);
-    console.log('data2:', data2);
-}
-
-// Adicionar botão de depuração (remover em produção)
-const debugButton = document.createElement('button');
-debugButton.textContent = 'Debug Data';
-debugButton.onclick = logDataStatus;
-document.body.appendChild(debugButton);
 
 
     </script>
