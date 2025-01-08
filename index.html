@@ -1,223 +1,121 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparação de Tabelas</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>CSV Graph Comparator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <style>
-        body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f4f4;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    text-align: center;
-    color: #333;
-}
-
-.input-section {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.file-input {
-    width: 45%;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.import-btn {
-    display: inline-block;
-    padding: 10px 15px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.import-btn:hover {
-    background-color: #45a049;
-}
-
-#generateCharts {
-    display: block;
-    width: 200px;
-    margin: 20px auto;
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-#generateCharts:hover {
-    background-color: #45a049;
-}
-
-.chart-container {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-canvas {
-    width: 45% !important;
-    height: auto !important;
-}
-
-#file1Name, #file2Name {
-    margin-left: 10px;
-    font-style: italic;
-}
-
-
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Comparação de Tabelas</h1>
-        <div class="input-section">
-            <div class="file-input">
-                <label for="file1">Tabela 1:</label>
-                <input type="file" id="file1" accept=".csv" style="display: none;">
-                <button class="import-btn" data-for="file1">Importar Arquivo 1</button>
-                <span id="file1Name"></span>
-            </div>
-            <div class="file-input">
-                <label for="file2">Tabela 2:</label>
-                <input type="file" id="file2" accept=".csv" style="display: none;">
-                <button class="import-btn" data-for="file2">Importar Arquivo 2</button>
-                <span id="file2Name"></span>
-            </div>
-        </div>
-        <button id="generateCharts">Gerar Gráficos</button>
-        <div class="chart-container">
-            <canvas id="chart1"></canvas>
-            <canvas id="chart2"></canvas>
-        </div>
-    </div>
-    <script src="script.js"></script>
-    <script>
-    let data1 = [];
-let data2 = [];
-
-document.getElementById('file1').addEventListener('change', (event) => loadFile(event, 1));
-document.getElementById('file2').addEventListener('change', (event) => loadFile(event, 2));
-document.getElementById('compareBtn').addEventListener('click', compareTables);
-
-function loadFile(event, fileNumber) {
-    const file = event.target.files[0];
-    Papa.parse(file, {
-        complete: (results) => {
-            if (fileNumber === 1) {
-                data1 = results.data;
-            } else {
-                data2 = results.data;
-            }
-            console.log(`Arquivo ${fileNumber} carregado:`, results.data);
-        },
-        header: true
-    });
-}
-
-function compareTables() {
-    if (data1.length === 0 || data2.length === 0) {
-        alert('Por favor, carregue ambos os arquivos antes de comparar.');
-        return;
-    }
-
-    const processedData1 = processData(data1);
-    const processedData2 = processData(data2);
-
-    createChart('chart1', processedData1, 'Tabela 1');
-    createChart('chart2', processedData2, 'Tabela 2');
-}
-
-function processData(data) {
-    const motivosTempo = {};
-
-    data.forEach(row => {
-        const motivo = row['Motivos'];
-        const tempo = parseFloat(row['Tempo Decorrido (s)']);
-        
-        if (motivo && !isNaN(tempo)) {
-            if (!motivosTempo[motivo]) {
-                motivosTempo[motivo] = { total: 0, count: 0 };
-            }
-            motivosTempo[motivo].total += tempo;
-            motivosTempo[motivo].count++;
-        }
-    });
-
-    const labels = Object.keys(motivosTempo);
-    const values = labels.map(motivo => motivosTempo[motivo].total / motivosTempo[motivo].count);
-
-    return { labels, values };
-}
-
-function createChart(canvasId, data, title) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    <h1>CSV Graph Comparator</h1>
     
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                data: data.values,
-                backgroundColor: [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                    '#FF9F40', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: title
+    <div>
+        <h2>Upload CSV Files</h2>
+        <label for="csvFile1">CSV File 1:</label>
+        <input type="file" id="csvFile1" accept=".csv">
+        <br>
+        <label for="csvFile2">CSV File 2:</label>
+        <input type="file" id="csvFile2" accept=".csv">
+    </div>
+
+    <button id="generateCharts">Generate Charts</button>
+
+    <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+        <canvas id="chart1" width="400" height="400"></canvas>
+        <canvas id="chart2" width="400" height="400"></canvas>
+    </div>
+
+    <script>
+        document.getElementById('generateCharts').addEventListener('click', () => {
+            const file1 = document.getElementById('csvFile1').files[0];
+            const file2 = document.getElementById('csvFile2').files[0];
+
+            if (!file1 || !file2) {
+                alert('Please upload both CSV files.');
+                return;
+            }
+
+            Promise.all([readCSV(file1), readCSV(file2)]).then(([data1, data2]) => {
+                const groupedData1 = groupAndAverage(data1);
+                const groupedData2 = groupAndAverage(data2);
+
+                createPieChart('chart1', groupedData1, 'CSV File 1');
+                createPieChart('chart2', groupedData2, 'CSV File 2');
+            });
+        });
+
+        function readCSV(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const lines = event.target.result.split('\n');
+                    const data = lines.slice(1).map(line => line.split(',').map(cell => cell.trim()));
+                    resolve(data);
+                };
+                reader.onerror = () => reject(reader.error);
+                reader.readAsText(file);
+            });
+        }
+
+        function groupAndAverage(data) {
+            const grouped = {};
+            data.forEach(row => {
+                const reason = row[1]; // Column 2: Motivos
+                const time = parseFloat(row[2]); // Column 3: Tempo
+                if (!isNaN(time)) {
+                    if (!grouped[reason]) {
+                        grouped[reason] = { sum: 0, count: 0 };
+                    }
+                    grouped[reason].sum += time;
+                    grouped[reason].count += 1;
+                }
+            });
+
+            return Object.entries(grouped).map(([reason, { sum, count }]) => ({
+                reason,
+                average: sum / count
+            }));
+        }
+
+        function createPieChart(canvasId, data, title) {
+            const labels = data.map(item => item.reason);
+            const values = data.map(item => item.average);
+
+            new Chart(document.getElementById(canvasId), {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: values,
+                        backgroundColor: generateColors(labels.length),
+                    }]
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.parsed || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(2);
-                            return `${label}: ${percentage}% (${value.toFixed(2)}s)`;
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: title
                         }
                     }
                 }
-            }
+            });
         }
-    });
-}
 
-
+        function generateColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const r = Math.floor(Math.random() * 255);
+                const g = Math.floor(Math.random() * 255);
+                const b = Math.floor(Math.random() * 255);
+                colors.push(`rgba(${r}, ${g}, ${b}, 0.7)`);
+            }
+            return colors;
+        }
     </script>
 </body>
 </html>
-
