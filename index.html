@@ -115,22 +115,22 @@
     </style>
 </head>
 <body>
-    <h1>Analise de Projeto</h1>
+    <h1>CSV Graph Comparator</h1>
 
     <div class="image-container">
         <img src="https://gestaocomqualidade.com.br/wp-content/uploads/2023/03/DMAIC.jpg" alt="DMAIC Process">
     </div>
     
     <div>
-        <h2>Antes e Depois</h2>
-        <label for="csvFile1">Antes:</label>
+        <h2>Upload CSV Files</h2>
+        <label for="csvFile1">CSV File 1:</label>
         <input type="file" id="csvFile1" accept=".csv">
         <br>
-        <label for="csvFile2">Depois:</label>
+        <label for="csvFile2">CSV File 2:</label>
         <input type="file" id="csvFile2" accept=".csv">
     </div>
 
-    <button id="generateCharts">Gerar gráficos</button>
+    <button id="generateCharts">Generate Charts</button>
 
     <div class="charts-container">
         <canvas id="chart1" width="400" height="400"></canvas>
@@ -183,10 +183,13 @@
                 }
             });
 
-            return Object.entries(grouped).map(([reason, { sum, count }]) => ({
+            const groupedArray = Object.entries(grouped).map(([reason, { sum, count }]) => ({
                 reason,
                 average: sum / count
             }));
+
+            // Sort by average descending and keep the top 6
+            return groupedArray.sort((a, b) => b.average - a.average).slice(0, 6);
         }
 
         function createPieChart(canvasId, data, title) {
