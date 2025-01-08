@@ -121,8 +121,10 @@ canvas {
     </div>
     <script src="script.js"></script>
     <script>
-        let data1 = [];
+      let data1 = [];
 let data2 = [];
+let chart1 = null;
+let chart2 = null;
 
 document.querySelectorAll('.import-btn').forEach(button => {
     button.addEventListener('click', function() {
@@ -148,6 +150,11 @@ function handleFileSelect(e, fileNameId, dataArray) {
             complete: function(results) {
                 dataArray.length = 0; // Clear the array
                 dataArray.push(...results.data);
+                console.log(`Arquivo ${fileNameId} carregado:`, dataArray);
+            },
+            error: function(error) {
+                console.error(`Erro ao analisar o arquivo ${fileNameId}:`, error);
+                alert(`Erro ao analisar o arquivo. Por favor, verifique o formato do CSV.`);
             }
         });
     }
@@ -161,11 +168,20 @@ function generateCharts() {
         return;
     }
 
-    const processedData1 = processData(data1);
-    const processedData2 = processData(data2);
+    try {
+        const processedData1 = processData(data1);
+        const processedData2 = processData(data2);
 
-    createPieChart('chart1', processedData1, 'Gráfico 1');
-    createPieChart('chart2', processedData2, 'Gráfico 2');
+        if (processedData1.labels.length === 0 || processedData2.labels.length === 0) {
+            throw new Error('Dados processados estão vazios. Verifique se os arquivos CSV contêm dados válidos.');
+        }
+
+        createPieChart('chart1', processedData1, 'Gráfico 1');
+        createPieChart('chart2', processedData2, 'Gráfico 2');
+    } catch (error) {
+        console.error('Erro ao gerar gráficos:', error);
+        alert(`Erro ao gerar gráficos: ${error.message}`);
+    }
 }
 
 function processData(data) {
@@ -173,7 +189,7 @@ function processData(data) {
     data.forEach(entry => {
         const motivo = entry['Motivos'];
         const tempo = parseFloat(entry['Tempo Decorrido (s)']);
-        if (!isNaN(tempo)) {
+        if (motivo && !isNaN(tempo)) {
             if (!groupedData[motivo]) {
                 groupedData[motivo] = { total: 0, count: 0 };
             }
@@ -193,8 +209,20 @@ function processData(data) {
 }
 
 function createPieChart(canvasId, data, title) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    new Chart(ctx, {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) {
+        console.error(`Elemento canvas com id ${canvasId} não encontrado.`);
+        return;
+    }
+
+    // Destruir o gráfico existente, se houver
+    if (canvasId === 'chart1' && chart1) {
+        chart1.destroy();
+    } else if (canvasId === 'chart2' && chart2) {
+        chart2.destroy();
+    }
+
+    const newChart = new Chart(ctx, {
         type: 'pie',
         data: {
             labels: data.labels,
@@ -228,7 +256,27 @@ function createPieChart(canvasId, data, title) {
             }
         }
     });
+
+    // Armazenar a referência do novo gráfico
+    if (canvasId === 'chart1') {
+        chart1 = newChart;
+    } else if (canvasId === 'chart2') {
+        chart2 = newChart;
+    }
 }
+
+// Função para depuração
+function logDataStatus() {
+    console.log('Status dos dados:');
+    console.log('data1:', data1);
+    console.log('data2:', data2);
+}
+
+// Adicionar botão de depuração (remover em produção)
+const debugButton = document.createElement('button');
+debugButton.textContent = 'Debug Data';
+debugButton.onclick = logDataStatus;
+document.body.appendChild(debugButton);
 
 
     </script>
