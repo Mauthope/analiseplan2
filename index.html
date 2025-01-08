@@ -190,28 +190,27 @@
         }
 
         function createPieChart(canvasId, data, title) {
+            const labels = data.map(item => item.reason);
+            const values = data.map(item => item.average);
+
+            // Sort data by average values in descending order
             const sortedData = data.sort((a, b) => b.average - a.average);
+
+            // Highlight the top 6
             const top6 = sortedData.slice(0, 6);
             const others = sortedData.slice(6);
 
-            const labels = top6.map(item => item.reason).concat('Others');
-            const values = top6.map(item => item.average).concat(
-                others.reduce((sum, item) => sum + item.average, 0)
-            );
-
-            const backgroundColors = generateColors(labels.length);
-            const highlightedColors = backgroundColors.map((color, index) => 
-                index < 6 ? highlightColor(color) : color
-            );
+            const finalLabels = [...top6.map(item => item.reason), ...others.map(item => 'Other: ' + item.reason)];
+            const finalValues = [...top6.map(item => item.average), ...others.map(item => item.average)];
 
             new Chart(document.getElementById(canvasId), {
                 type: 'pie',
                 data: {
-                    labels: labels,
+                    labels: finalLabels,
                     datasets: [{
                         label: title,
-                        data: values,
-                        backgroundColor: highlightedColors,
+                        data: finalValues,
+                        backgroundColor: generateColors(finalLabels.length),
                     }]
                 },
                 options: {
@@ -238,10 +237,6 @@
                 colors.push(`rgba(${r}, ${g}, ${b}, 0.7)`);
             }
             return colors;
-        }
-
-        function highlightColor(color) {
-            return color.replace(/0\.7\)/, '1)');
         }
     </script>
 </body>
