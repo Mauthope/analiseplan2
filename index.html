@@ -138,6 +138,16 @@
     </div>
 
     <script>
+        const fixedColors = {
+            "Motivo1": "#FF5733",
+            "Motivo2": "#33FF57",
+            "Motivo3": "#3357FF",
+            "Motivo4": "#F3FF33",
+            "Motivo5": "#FF33A6",
+            "Motivo6": "#A633FF",
+            "Other": "#CCCCCC"
+        };
+
         document.getElementById('generateCharts').addEventListener('click', () => {
             const file1 = document.getElementById('csvFile1').files[0];
             const file2 = document.getElementById('csvFile2').files[0];
@@ -202,6 +212,7 @@
 
             const finalLabels = [...top6.map(item => item.reason), ...others.map(item => 'Other: ' + item.reason)];
             const finalValues = [...top6.map(item => item.average), ...others.map(item => item.average)];
+            const finalColors = [...top6.map(item => fixedColors[item.reason] || generateRandomColor()), ...others.map(() => fixedColors.Other)];
 
             new Chart(document.getElementById(canvasId), {
                 type: 'pie',
@@ -210,7 +221,7 @@
                     datasets: [{
                         label: title,
                         data: finalValues,
-                        backgroundColor: generateColors(finalLabels.length),
+                        backgroundColor: finalColors,
                     }]
                 },
                 options: {
@@ -228,15 +239,11 @@
             });
         }
 
-        function generateColors(count) {
-            const colors = [];
-            for (let i = 0; i < count; i++) {
-                const r = Math.floor(Math.random() * 255);
-                const g = Math.floor(Math.random() * 255);
-                const b = Math.floor(Math.random() * 255);
-                colors.push(`rgba(${r}, ${g}, ${b}, 0.7)`);
-            }
-            return colors;
+        function generateRandomColor() {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r}, ${g}, ${b}, 0.7)`;
         }
     </script>
 </body>
