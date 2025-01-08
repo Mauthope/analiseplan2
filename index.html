@@ -1,248 +1,140 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desvio Padrão e Contagem</title>
+    <title>Table Comparison Charts</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f9f9f9;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
-
-        header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 1rem;
-            text-align: center;
+        .input-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .table-input {
+            width: 48%;
+        }
+        textarea {
             width: 100%;
+            height: 200px;
         }
-
-        main {
-            padding: 1rem;
-            max-width: 900px;
-            width: 100%;
-        }
-
-        .controls {
-            margin-bottom: 2rem;
+        .chart-container {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            background-color: #ffffff;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            justify-content: space-between;
         }
-
-        .controls label {
-            font-weight: bold;
-        }
-
-        .controls input, .controls button {
-            padding: 0.5rem;
-            font-size: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .controls button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .controls button:hover {
-            background-color: #45a049;
-        }
-
-        #chartContainer {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        canvas {
-            max-width: 100%;
-            height: 400px;
-        }
-
-        h2 {
-            color: #333;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .average-container {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            justify-content: center;
-        }
-
-        .average-button {
-            padding: 1rem 2rem;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s;
-        }
-
-        .average-button:hover {
-            background-color: #45a049;
+        .chart {
+            width: 48%;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Desvio Padrão e Contagem</h1>
-    </header>
-    <main>
-        <div class="controls">
-            <div>
-                <label for="fileInput">Carregar arquivo CSV:</label>
-                <input type="file" id="fileInput" accept=".csv">
-            </div>
-            <div>
-                <label for="startHour">Hora Inicial:</label>
-                <input type="time" id="startHour" value="00:00">
-            </div>
-            <div>
-                <label for="endHour">Hora Final:</label>
-                <input type="time" id="endHour" value="23:59">
-            </div>
-            <div>
-                <button id="filterButton">Filtrar Dados</button>
-            </div>
+    <h1>Table Comparison Charts</h1>
+    <div class="input-section">
+        <div class="table-input">
+            <h2>Table 1</h2>
+            <textarea id="table1" placeholder="Paste CSV data here"></textarea>
         </div>
-
-        <div id="chartContainer">
-            <div class="average-container" id="averageContainer">
-                <!-- Médias de "Rota 1" e "Quantidade de bobinas" serão colocadas aqui -->
-            </div>
-            <div>
-                <h2>Tempo por Motivo (Decrescente)</h2>
-                <canvas id="groupedChart"></canvas>
-            </div>
+        <div class="table-input">
+            <h2>Table 2</h2>
+            <textarea id="table2" placeholder="Paste CSV data here"></textarea>
         </div>
-    </main>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </div>
+    <button onclick="generateCharts()">Generate Charts</button>
+    <div class="chart-container">
+        <div class="chart">
+            <canvas id="chart1"></canvas>
+        </div>
+        <div class="chart">
+            <canvas id="chart2"></canvas>
+        </div>
+    </div>
+    <script src="script.js"></script>
     <script>
-        let globalData = [];
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const csvData = e.target.result;
-                    globalData = parseCSV(csvData);
-                    if (globalData.content.length > 0) {
-                        createGroupedChart(globalData);
-                    } else {
-                        alert('Nenhum dado válido encontrado no arquivo CSV.');
-                    }
-                };
-                reader.readAsText(file);
+
+        function parseCSV(csv) {
+    const lines = csv.split('\n');
+    const headers = lines[0].split(',');
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',');
+        if (values.length === headers.length) {
+            const entry = {};
+            for (let j = 0; j < headers.length; j++) {
+                entry[headers[j].trim()] = values[j].trim();
             }
-        });
+            data.push(entry);
+        }
+    }
+    return data;
+}
 
-        document.getElementById('filterButton').addEventListener('click', function() {
-            if (globalData.content) {
-                createGroupedChart(globalData);
+function processData(data) {
+    const groupedData = {};
+    data.forEach(entry => {
+        const motivo = entry['Motivos'];
+        const tempo = parseFloat(entry['Tempo Decorrido (s)']);
+        if (!groupedData[motivo]) {
+            groupedData[motivo] = { total: 0, count: 0 };
+        }
+        groupedData[motivo].total += tempo;
+        groupedData[motivo].count++;
+    });
+
+    const labels = [];
+    const values = [];
+    for (const [motivo, data] of Object.entries(groupedData)) {
+        labels.push(motivo);
+        values.push(data.total / data.count);
+    }
+
+    return { labels, values };
+}
+
+function createPieChart(ctx, labels, data) {
+    return new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Average Time by Reason'
             }
-        });
-
-        function parseCSV(data) {
-            const rows = data.split('\n').filter(row => row.trim() !== '');
-            const content = rows.slice(1).map(row => row.split(',').map(cell => cell.replace(/"/g, '').trim()));
-            return { content };
         }
+    });
+}
 
-        function createGroupedChart(data) {
-            const groupedData = {};
-            const countData = {};
-            let totalRota1 = 0;
-            let countRota1 = 0;
-            let totalBobinas = 0;
-            let countBobinas = 0;
+function generateCharts() {
+    const table1Data = parseCSV(document.getElementById('table1').value);
+    const table2Data = parseCSV(document.getElementById('table2').value);
 
-            data.content.forEach(row => {
-                const reason = row[1]; // Supondo que a coluna 1 seja o motivo
-                const time = parseFloat(row[2]); // Supondo que a coluna 2 seja o tempo
+    const processedData1 = processData(table1Data);
+    const processedData2 = processData(table2Data);
 
-                if (!isNaN(time)) {
-                    if (reason === "Rota1") {
-                        totalRota1 += time;
-                        countRota1++;
-                    } else if (reason === "Quantidade de bobinas") {
-                        totalBobinas += time;
-                        countBobinas++;
-                    } else {
-                        groupedData[reason] = (groupedData[reason] || 0) + time;
-                        countData[reason] = (countData[reason] || 0) + 1;
-                    }
-                }
-            });
+    const ctx1 = document.getElementById('chart1').getContext('2d');
+    const ctx2 = document.getElementById('chart2').getContext('2d');
 
-            const averageRota1 = (totalRota1 / countRota1) / 60; // Dividido por 60
-            const averageBobinas = totalBobinas / countBobinas; // Média de bobinas sem alteração
+    createPieChart(ctx1, processedData1.labels, processedData1.values);
+    createPieChart(ctx2, processedData2.labels, processedData2.values);
+}
 
-            // Exibir as médias dentro de botões
-            const averageContainer = document.getElementById('averageContainer');
-            averageContainer.innerHTML = `
-                <button class="average-button">Média de "Rota 1": ${averageRota1.toFixed(2)} minutos</button>
-                <button class="average-button">Média de "Quantidade de bobinas": ${averageBobinas.toFixed(2)} unidades</button>
-            `;
 
-            const averagedData = Object.entries(groupedData)
-                .reduce((acc, [key, total]) => {
-                    acc[key] = total / countData[key];
-                    return acc;
-                }, {});
-
-            const sortedData = Object.entries(averagedData)
-                .sort((a, b) => b[1] - a[1])
-                .reduce((acc, [key, value]) => {
-                    acc.labels.push(key);
-                    acc.values.push(value);
-                    return acc;
-                }, { labels: [], values: [] });
-
-            const ctx = document.getElementById('groupedChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedData.labels,
-                    datasets: [{
-                        label: 'Tempo Médio',
-                        data: sortedData.values,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
     </script>
 </body>
 </html>
+
