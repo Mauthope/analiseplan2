@@ -138,15 +138,7 @@
     </div>
 
     <script>
-        const fixedColors = {
-            "Motivo1": "#FF5733",
-            "Motivo2": "#33FF57",
-            "Motivo3": "#3357FF",
-            "Motivo4": "#F3FF33",
-            "Motivo5": "#FF33A6",
-            "Motivo6": "#A633FF",
-            "Other": "#CCCCCC"
-        };
+        let chartColors = {}; // Store colors for consistency between charts
 
         document.getElementById('generateCharts').addEventListener('click', () => {
             const file1 = document.getElementById('csvFile1').files[0];
@@ -161,6 +153,7 @@
                 const groupedData1 = groupAndAverage(data1);
                 const groupedData2 = groupAndAverage(data2);
 
+                chartColors = generateColors(groupedData1.map(item => item.reason));
                 createPieChart('chart1', groupedData1, 'CSV File 1');
                 createPieChart('chart2', groupedData2, 'CSV File 2');
             });
@@ -199,6 +192,23 @@
             }));
         }
 
+        function generateColors(labels) {
+            const colors = {};
+            labels.forEach(label => {
+                colors[label] = getRandomColor();
+            });
+            return colors;
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
         function createPieChart(canvasId, data, title) {
             const labels = data.map(item => item.reason);
             const values = data.map(item => item.average);
@@ -212,7 +222,7 @@
 
             const finalLabels = [...top6.map(item => item.reason), ...others.map(item => 'Other: ' + item.reason)];
             const finalValues = [...top6.map(item => item.average), ...others.map(item => item.average)];
-            const finalColors = [...top6.map(item => fixedColors[item.reason] || fixedColors.Other), ...others.map(() => fixedColors.Other)];
+            const finalColors = [...top6.map(item => chartColors[item.reason] || '#CCCCCC'), ...others.map(() => '#CCCCCC')];
 
             new Chart(document.getElementById(canvasId), {
                 type: 'pie',
